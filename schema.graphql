@@ -1,0 +1,17 @@
+type AppValidation @table(database: "yeti-applications") @export {
+    id: ID!
+    appId: String! @indexed
+    version: String! @indexed
+    timestamp: String!
+    validationType: String! @indexed
+    status: String! @indexed
+    operationType: String
+    meanAllocBytes: Int
+    meanAllocCount: Int
+    p95LatencyUs: Int
+    maxAllocBytes: Int
+    netMemoryBytes: Int
+    opsPerSec: Float
+    recordCount: Int
+    details: String
+}
