@@ -9,7 +9,7 @@ export const Route = createFileRoute('/app/$appId/')({
     const tables = schema?.tables || []
 
     if (tables.length > 0) {
-      const groups = groupTablesByDatabase(tables)
+      const groups = groupTablesByDatabase(tables, params.appId)
       const firstEntry = groups.entries().next().value
       if (firstEntry) {
         const [db, tbls] = firstEntry

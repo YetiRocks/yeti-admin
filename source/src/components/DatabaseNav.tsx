@@ -5,12 +5,13 @@ interface Props {
   appId: string
   tables: TableInfo[]
   counts: Record<string, number>
+  fallbackDb?: string
 }
 
-export function groupTablesByDatabase(tables: TableInfo[]): Map<string, TableInfo[]> {
+export function groupTablesByDatabase(tables: TableInfo[], fallbackDb?: string): Map<string, TableInfo[]> {
   const groups = new Map<string, TableInfo[]>()
   for (const t of tables) {
-    const db = t.database
+    const db = t.database || fallbackDb || 'default'
     const list = groups.get(db) || []
     list.push(t)
     groups.set(db, list)
@@ -23,8 +24,8 @@ export function groupTablesByDatabase(tables: TableInfo[]): Map<string, TableInf
   return sorted
 }
 
-export function DatabaseNav({ appId, tables, counts }: Props) {
-  const groups = groupTablesByDatabase(tables)
+export function DatabaseNav({ appId, tables, counts, fallbackDb }: Props) {
+  const groups = groupTablesByDatabase(tables, fallbackDb)
 
   if (tables.length === 0) {
     return (

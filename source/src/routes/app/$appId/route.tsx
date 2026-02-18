@@ -39,7 +39,7 @@ function AppLayout() {
   const isData = location.pathname.includes('/data/')
 
   // Find first db/table for the Data link
-  const groups = groupTablesByDatabase(tables)
+  const groups = groupTablesByDatabase(tables, appId)
   const firstEntry = groups.entries().next().value
   const firstDb = firstEntry ? firstEntry[0] : null
   const firstTable = firstEntry ? firstEntry[1][0]?.name : null
@@ -47,7 +47,9 @@ function AppLayout() {
   return (
     <div className="detail-view">
       <div className="detail-header">
-        <Link to="/" className="btn back-btn">Back</Link>
+        <div className="detail-header-left">
+          <Link to="/" className="back-btn">&lt; All Apps</Link>
+        </div>
         <span className="detail-app-name">{appId}</span>
         <span className={`status-dot ${enabled ? 'running' : 'disabled'}`} />
         <span className={`status-label ${enabled ? 'running' : 'disabled'}`}>
@@ -76,7 +78,10 @@ function AppLayout() {
       </div>
 
       <div className="detail-body-layout">
-        {tables.length > 0 && <DatabaseNav appId={appId} tables={tables} counts={counts} />}
+        {isData && tables.length > 0
+          ? <DatabaseNav appId={appId} tables={tables} counts={counts} fallbackDb={appId} />
+          : <div className="db-nav" />
+        }
         <div className="detail-content">
           <Outlet />
         </div>

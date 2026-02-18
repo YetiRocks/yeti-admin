@@ -1,9 +1,11 @@
 import {
   useReactTable,
   getCoreRowModel,
+  getSortedRowModel,
   flexRender,
   createColumnHelper,
   type ColumnDef,
+  type SortingState,
 } from '@tanstack/react-table'
 import { useMemo, useState } from 'react'
 
@@ -28,6 +30,8 @@ export function DataTable({ records, fields, total, page, pageSize, onPageChange
   const [editJson, setEditJson] = useState('')
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
+  const firstCol = fields.length > 0 ? fields[0].name : (records[0] ? Object.keys(records[0])[0] : '')
+  const [sorting, setSorting] = useState<SortingState>(firstCol ? [{ id: firstCol, desc: false }] : [])
 
   const columns = useMemo<ColumnDef<Record<string, unknown>, unknown>[]>(() => {
     const keys = fields.length > 0
@@ -50,7 +54,10 @@ export function DataTable({ records, fields, total, page, pageSize, onPageChange
   const table = useReactTable({
     data: records,
     columns,
+    state: { sorting },
+    onSortingChange: setSorting,
     getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
   })
 
   function openDetail(record: Record<string, unknown>) {
@@ -99,8 +106,13 @@ export function DataTable({ records, fields, total, page, pageSize, onPageChange
             {table.getHeaderGroups().map(hg => (
               <tr key={hg.id}>
                 {hg.headers.map(header => (
-                  <th key={header.id}>
+                  <th
+                    key={header.id}
+                    className="sortable-header"
+                    onClick={header.column.getToggleSortingHandler()}
+                  >
                     {flexRender(header.column.columnDef.header, header.getContext())}
+                    {{ asc: ' ▲', desc: ' ▼' }[header.column.getIsSorted() as string] ?? ''}
                   </th>
                 ))}
               </tr>

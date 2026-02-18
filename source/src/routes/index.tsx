@@ -3,6 +3,7 @@ import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { api, BASE } from '../api'
 import { AppSummary } from '../types'
 import { AppCard } from '../components/AppCard'
+import { NewAppModal } from '../components/NewAppModal'
 
 export const Route = createFileRoute('/')({
   loader: () => api<AppSummary[]>(`${BASE}/apps`),
@@ -13,6 +14,7 @@ function CardGrid() {
   const apps = Route.useLoaderData()
   const navigate = useNavigate()
   const [filter, setFilter] = useState('')
+  const [showNewApp, setShowNewApp] = useState(false)
 
   const sorted = [...apps].sort((a, b) => {
     if (a.is_extension !== b.is_extension) return a.is_extension ? -1 : 1
@@ -33,7 +35,7 @@ function CardGrid() {
           value={filter}
           onChange={e => setFilter(e.target.value)}
         />
-        <button className="btn btn-primary" style={{ marginLeft: 'auto' }} onClick={() => {}}>
+        <button className="btn btn-primary" style={{ marginLeft: 'auto' }} onClick={() => setShowNewApp(true)}>
           New Application
         </button>
       </div>
@@ -46,6 +48,12 @@ function CardGrid() {
           />
         ))}
       </div>
+      {showNewApp && (
+        <NewAppModal
+          installedApps={new Set(apps.map(a => a.app_id))}
+          onClose={() => setShowNewApp(false)}
+        />
+      )}
     </div>
   )
 }
