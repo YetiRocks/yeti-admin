@@ -4,7 +4,7 @@ import react from '@vitejs/plugin-react'
 import path from 'path'
 
 export default defineConfig({
-  base: './',
+  base: '/yeti-applications/',
   plugins: [
     TanStackRouterVite({
       routesDirectory: './src/routes',

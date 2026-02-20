@@ -12,7 +12,7 @@ export function AppCard({ app, onClick }: { app: AppSummary; onClick: () => void
       </div>
       <div className="app-card-name">{app.app_id}</div>
       <div className="app-card-stats">
-        {app.has_schema && <span>{app.resource_count} table{app.resource_count !== 1 ? 's' : ''}</span>}
+        {app.has_schema && <span>{app.table_count} table{app.table_count !== 1 ? 's' : ''}</span>}
       </div>
     </div>
   )

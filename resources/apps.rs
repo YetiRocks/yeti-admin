@@ -97,6 +97,34 @@ fn count_resources(app_path: &Path) -> usize {
         .unwrap_or(0)
 }
 
+/// Count @table types across all schema files referenced in config.yaml
+fn count_tables(app_path: &Path) -> usize {
+    // Read config to find schema files
+    let config = read_app_config(app_path);
+    let schema_paths: Vec<String> = config
+        .as_ref()
+        .and_then(|c| c.get("schemas"))
+        .and_then(|v| v.as_array())
+        .map(|arr| arr.iter().filter_map(|v| v.as_str().map(String::from)).collect())
+        .unwrap_or_default();
+
+    // If no schemas in config, check for schema.graphql at root
+    let paths_to_check: Vec<std::path::PathBuf> = if schema_paths.is_empty() {
+        let default = app_path.join("schema.graphql");
+        if default.exists() { vec![default] } else { vec![] }
+    } else {
+        schema_paths.iter().map(|p| app_path.join(p)).collect()
+    };
+
+    let mut count = 0;
+    for schema_path in paths_to_check {
+        if let Ok(content) = std::fs::read_to_string(&schema_path) {
+            count += content.matches("@table").count();
+        }
+    }
+    count
+}
+
 impl Resource for AppsResource {
     fn name(&self) -> &str {
         "apps"
@@ -116,6 +144,7 @@ impl Resource for AppsResource {
             let files = list_app_files(&app_path);
             let has_schema = has_schema(&app_path);
             let resource_count = count_resources(&app_path);
+            let table_count = count_tables(&app_path);
 
             return reply().json(json!({
                 "app_id": app_id,
@@ -123,6 +152,7 @@ impl Resource for AppsResource {
                 "files": files,
                 "has_schema": has_schema,
                 "resource_count": resource_count,
+                "table_count": table_count,
             }));
         }
 
@@ -158,6 +188,7 @@ impl Resource for AppsResource {
                 .unwrap_or(false);
             let has_schema = has_schema(&path);
             let resource_count = count_resources(&path);
+            let table_count = count_tables(&path);
             let is_extension = config
                 .as_ref()
                 .and_then(|c| c.get("extension"))
@@ -170,6 +201,7 @@ impl Resource for AppsResource {
                 "enabled": enabled,
                 "has_schema": has_schema,
                 "resource_count": resource_count,
+                "table_count": table_count,
                 "is_extension": is_extension,
             }));
         }

@@ -4,6 +4,7 @@ export interface AppSummary {
   enabled: boolean
   has_schema: boolean
   resource_count: number
+  table_count: number
   is_extension: boolean
 }
 
@@ -13,6 +14,7 @@ export interface AppDetail {
   files: string[]
   has_schema: boolean
   resource_count: number
+  table_count: number
 }
 
 export interface AppConfig {
