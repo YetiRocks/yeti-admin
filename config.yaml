@@ -1,5 +1,5 @@
-name: "Yeti Admin"
-app_id: "yeti-admin"
+name: "Admin"
+app_id: "admin"
 version: "1.0.0"
 description: "Unified admin panel — applications, auth, telemetry, vectors, benchmarks"
 enabled: true
