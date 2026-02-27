@@ -1,7 +1,7 @@
 import { createRootRoute, Outlet, Link, useRouter } from '@tanstack/react-router'
 import { useState, useEffect, useCallback } from 'react'
 import { useToast } from '../hooks/useToast'
-import { api, AUTH_BASE } from '../api'
+import { BASE, AUTH_BASE, setSessionExpiredHandler } from '../api'
 
 export const Route = createRootRoute({
   component: RootLayout,
@@ -72,13 +72,11 @@ function RootLayout() {
 
   const checkAuth = useCallback(async () => {
     try {
-      const res = await fetch(`${AUTH_BASE}/auth`, { credentials: 'same-origin' })
-      if (res.ok) {
-        const data = await res.json()
-        setAuthenticated(data.authenticated === true)
-      } else {
-        setAuthenticated(false)
-      }
+      // Hit an admin endpoint that goes through the auth pipeline.
+      // /yeti-auth/auth doesn't work for JWT (yeti-auth's own router
+      // doesn't include itself as an auth extension).
+      const res = await fetch(`${BASE}/appvalidation/`, { credentials: 'same-origin' })
+      setAuthenticated(res.ok)
     } catch {
       setAuthenticated(false)
     }
@@ -88,8 +86,15 @@ function RootLayout() {
     checkAuth()
   }, [checkAuth])
 
+  // Register the 401 handler so api() calls transition to login without reloading
+  useEffect(() => {
+    setSessionExpiredHandler(() => setAuthenticated(false))
+  }, [])
+
   const handleLogin = () => {
-    setAuthenticated(true)
+    // Small delay to let the browser store the httpOnly cookie from the
+    // login response before firing authenticated API calls
+    setTimeout(() => setAuthenticated(true), 50)
   }
 
   const handleLogout = async () => {
