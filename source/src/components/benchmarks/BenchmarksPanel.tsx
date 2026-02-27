@@ -127,6 +127,17 @@ export default function BenchmarksPanel() {
           lastResult: data.lastResult,
           error: data.lastError,
         }
+
+        // Client-side timeout: if server still reports "running" but elapsed
+        // exceeds configured duration by 10s, treat it as idle. Handles stale
+        // server state from PID reuse, zombie processes, or old server code.
+        const isOverdue = state.status === 'running'
+          && (state.configuredDuration ?? 0) > 0
+          && (state.elapsedSecs ?? 0) > (state.configuredDuration ?? 0) + 10
+        if (isOverdue) {
+          state.status = 'idle'
+        }
+
         setRunner(state)
 
         // Update configs from runner response

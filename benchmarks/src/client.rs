@@ -6,7 +6,7 @@ pub fn build_client() -> Client {
     Client::builder()
         .danger_accept_invalid_certs(true)
         .pool_max_idle_per_host(100)
-        .timeout(Duration::from_secs(30))
+        .timeout(Duration::from_secs(5))
         .build()
         .expect("failed to build reqwest client")
 }

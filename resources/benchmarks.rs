@@ -99,8 +99,10 @@ impl Resource for BenchmarksResource {
         // Check if a running process has finished
         let mut current_state = state.clone();
         if current_state.status != "idle" {
+            let mut should_idle = false;
+
             if let Some(pid) = current_state.child_pid {
-                // Check if process is still alive via /proc or kill -0 equivalent
+                // Check if process is still alive via kill -0
                 let alive = std::process::Command::new("kill")
                     .arg("-0")
                     .arg(pid.to_string())
@@ -110,12 +112,36 @@ impl Resource for BenchmarksResource {
                     .map(|s| s.success())
                     .unwrap_or(false);
                 if !alive {
-                    // Process finished, transition to idle
-                    let mut guard = runner_state().lock().unwrap();
-                    guard.status = "idle".to_string();
-                    guard.child_pid = None;
-                    current_state = guard.clone();
+                    should_idle = true;
                 }
+            }
+
+            // Duration-based timeout: if elapsed exceeds configured duration + 10s grace,
+            // force transition to idle. Handles PID reuse (kill -0 sees unrelated process)
+            // and zombie processes that never exit.
+            if !should_idle {
+                if let (Some(started), Some(duration)) = (current_state.started_at, current_state.configured_duration) {
+                    let elapsed = now_secs() - started;
+                    if elapsed > (duration as f64) + 10.0 {
+                        should_idle = true;
+                        // Kill the process in case it's actually stuck
+                        if let Some(pid) = current_state.child_pid {
+                            let _ = std::process::Command::new("kill")
+                                .arg("-9")
+                                .arg(pid.to_string())
+                                .stdout(std::process::Stdio::null())
+                                .stderr(std::process::Stdio::null())
+                                .status();
+                        }
+                    }
+                }
+            }
+
+            if should_idle {
+                let mut guard = runner_state().lock().unwrap();
+                guard.status = "idle".to_string();
+                guard.child_pid = None;
+                current_state = guard.clone();
             }
         }
 
@@ -124,7 +150,15 @@ impl Resource for BenchmarksResource {
             .unwrap_or(0.0);
 
         let warmup_secs = if current_state.status == "warming" { elapsed } else { 0.0 };
-        let elapsed_secs = if current_state.status == "running" { elapsed } else { 0.0 };
+        // Cap elapsed at configured_duration so UI doesn't show e.g. 740s / 30s
+        let elapsed_secs = if current_state.status == "running" {
+            match current_state.configured_duration {
+                Some(d) => elapsed.min(d as f64),
+                None => elapsed,
+            }
+        } else {
+            0.0
+        };
 
         // Load configs from TestConfig table
         let configs = match ctx.get_table("TestConfig") {

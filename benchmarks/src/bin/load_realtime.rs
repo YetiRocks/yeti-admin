@@ -147,9 +147,13 @@ async fn run_sse_test(
         let sse_url = format!("{}/demo-realtime/message?stream=sse", args.base_url);
         let m = metrics.clone();
         let c = sse_client.clone();
+        let sse_user = auth_user.to_string();
+        let sse_pass = auth_pass.to_string();
 
         handles.push(tokio::spawn(async move {
-            let Ok(resp) = c.get(&sse_url).send().await else {
+            let Ok(resp) = c.get(&sse_url)
+                .basic_auth(&sse_user, Some(&sse_pass))
+                .send().await else {
                 return;
             };
             let mut stream = resp.bytes_stream();

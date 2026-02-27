@@ -18,6 +18,8 @@ impl Resource for BestResultsResource {
         "bestresults"
     }
 
+    fn is_public(&self) -> bool { true }
+
     get!(_request, ctx, {
         // Query all TestRun records and find the best throughput per test
         let runs = match ctx.get_table("TestRun") {

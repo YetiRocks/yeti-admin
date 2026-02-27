@@ -63,7 +63,9 @@ async fn main() {
                     async move {
                         let url = format!("{}/demo-vector/Article/{}", ctx.base_url, blob_id);
                         let start = std::time::Instant::now();
-                        match ctx.client.get(&url).send().await {
+                        match ctx.client.get(&url)
+                            .basic_auth(&ctx.auth_user, Some(&ctx.auth_pass))
+                            .send().await {
                             Ok(resp) => {
                                 let bytes =
                                     resp.bytes().await.map(|b| b.len() as u64).unwrap_or(0);

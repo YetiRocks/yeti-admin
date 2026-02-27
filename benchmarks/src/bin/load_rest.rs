@@ -32,7 +32,9 @@ async fn main() {
                     let id = (ctx.vu_id % 100) + 1;
                     let url = format!("{}/demo-graphql/Book/{}", ctx.base_url, id);
                     let start = std::time::Instant::now();
-                    match ctx.client.get(&url).send().await {
+                    match ctx.client.get(&url)
+                        .basic_auth(&ctx.auth_user, Some(&ctx.auth_pass))
+                        .send().await {
                         Ok(resp) => {
                             let bytes = resp.bytes().await.map(|b| b.len() as u64).unwrap_or(0);
                             let latency = start.elapsed().as_micros() as u64;
@@ -180,7 +182,9 @@ async fn main() {
                         ctx.base_url, id
                     );
                     let start = std::time::Instant::now();
-                    match ctx.client.get(&url).send().await {
+                    match ctx.client.get(&url)
+                        .basic_auth(&ctx.auth_user, Some(&ctx.auth_pass))
+                        .send().await {
                         Ok(resp) => {
                             let bytes = resp.bytes().await.map(|b| b.len() as u64).unwrap_or(0);
                             let latency = start.elapsed().as_micros() as u64;

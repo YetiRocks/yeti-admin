@@ -32,7 +32,9 @@ async fn main() {
                     });
                     let url = format!("{}/demo-graphql/graphql", ctx.base_url);
                     let start = std::time::Instant::now();
-                    match ctx.client.post(&url).json(&query).send().await {
+                    match ctx.client.post(&url)
+                        .basic_auth(&ctx.auth_user, Some(&ctx.auth_pass))
+                        .json(&query).send().await {
                         Ok(resp) => {
                             let bytes = resp.bytes().await.map(|b| b.len() as u64).unwrap_or(0);
                             let latency = start.elapsed().as_micros() as u64;
@@ -111,7 +113,9 @@ async fn main() {
                     let query = serde_json::json!({ "query": query_str });
                     let url = format!("{}/demo-graphql/graphql", ctx.base_url);
                     let start = std::time::Instant::now();
-                    match ctx.client.post(&url).json(&query).send().await {
+                    match ctx.client.post(&url)
+                        .basic_auth(&ctx.auth_user, Some(&ctx.auth_pass))
+                        .json(&query).send().await {
                         Ok(resp) => {
                             let bytes = resp.bytes().await.map(|b| b.len() as u64).unwrap_or(0);
                             let latency = start.elapsed().as_micros() as u64;
